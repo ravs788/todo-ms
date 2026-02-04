@@ -33,13 +33,13 @@ Status: Architecture and infra ready; service implementations in progress.
 - Tech leads designing microservice‑aligned test strategies
 
 ## 🔗 Quick links
-- Architecture: docs/architecture/
-  - High‑Level Design: docs/architecture/high-level-design.md
-  - Low‑Level Design: docs/architecture/low-level-design.md
-  - Service Boundaries: docs/architecture/service-boundaries.md
-  - Sequence Diagrams: docs/architecture/sequence-diagrams.md
-- Testing strategy: docs/testing/test-strategy.md
-- Deployment plans: docs/deployment/migration-plan.md
+- Architecture: [docs/architecture/](docs/architecture/)
+  - High‑Level Design: [docs/architecture/high-level-design.md](docs/architecture/high-level-design.md)
+  - Low‑Level Design: [docs/architecture/low-level-design.md](docs/architecture/low-level-design.md)
+  - Service Boundaries: [docs/architecture/service-boundaries.md](docs/architecture/service-boundaries.md)
+  - Sequence Diagrams: [docs/architecture/sequence-diagrams.md](docs/architecture/sequence-diagrams.md)
+- Testing strategy: [docs/testing/test-strategy.md](docs/testing/test-strategy.md)
+- Deployment plans: [docs/deployment/migration-plan.md](docs/deployment/migration-plan.md)
 
 ---
 
@@ -63,6 +63,8 @@ See docs/architecture/sequence-diagrams.md and docs/architecture/high-level-desi
 ---
 
 ## 📁 Project structure (current)
+------------------------------
+
 ```text
 todo-ms/
   ├── services/
@@ -96,19 +98,19 @@ todo-ms/
 - Docker 24+, Docker Compose 2.20+
 - Make (for convenience)
 
-1) Configure environment
+1. Configure environment
 ```bash
 cp .env.example .env
 # Adjust ports/credentials only if needed
 ```
 
-2) Start local infrastructure (databases, MQ, cache, gateway, observability)
+2. Start local infrastructure (databases, MQ, cache, gateway, observability)
 ```bash
 make up
 # or: docker compose -f infra/compose/docker-compose.yml up -d
 ```
 
-3) Access local UIs
+3. Access local UIs
 - Kong proxy: http://localhost:8000
 - Kong Admin API: http://localhost:8001
 - RabbitMQ: http://localhost:15672
@@ -122,7 +124,7 @@ Note: Service containers will be added as we implement each service. The compose
 - Global defaults live in .env.example (copy to .env).
 - Per‑service configuration (as code is added) follows:
   - JWT/JWKS: Services validate JWT against Auth JWKS (http://auth-service:5001/api/v1/auth/jwks) using compose network DNS names (e.g., auth-service, postgres-todo).
-  - Databases: Postgres instances exposed on host ports (per HLD) and reachable by service name inside the compose network (e.g., postgres-todo:5432).
+  - Databases: Postgres instances exposed on host ports as defined in infra/compose/docker-compose.yml (mirrors HLD) and reachable by service name inside the compose network (e.g., postgres-todo:5432).
   - RabbitMQ: rabbitmq:5672
   - Redis: redis:6379
 - For Kubernetes, use Secrets/ConfigMaps/Helm values (see docs/deployment/).
@@ -139,7 +141,7 @@ Preconditions
 - For load/E2E (to be added), ensure services are built and running; provide base URLs via env.
 
 ## 📈 Observability workflow
-- Each service emits X‑Correlation‑Id and W3C trace headers (traceparent) per request.
+- Each service emits X‑Correlation‑Id and W3C trace headers (traceparent) per request (propagated across service calls via Kong).
 - Traces are exported via OpenTelemetry SDKs from each service into Jaeger.
 - Explore distributed traces in Jaeger; Prometheus scrapes service metrics; Grafana provides dashboards (import or add via UI).
 
@@ -151,6 +153,10 @@ Preconditions
 | DevOps | infra/compose/docker-compose.yml | Local infra services and ports |
 | Architects | docs/architecture/service-boundaries.md | Clear bounded contexts and rules |
 | New contributor | README.md → docs/architecture/high-level-design.md → docs/testing/test-strategy.md | Guided onboarding path |
+
+## 🤝 Contributing
+
+To work on a specific service, open its folder under services/, follow the language-specific README (to be added), and use scripts/test.sh for cross-service checks.
 
 ## 🗺️ Roadmap
 - docs/contracts with OpenAPI per service and AsyncAPI + JSON Schemas for events (planned)
