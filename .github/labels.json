@@ -1,0 +1,72 @@
+[
+  {
+    "name": "svc:auth",
+    "color": "0b5fff",
+    "description": "Authentication service ownership"
+  },
+  {
+    "name": "svc:user",
+    "color": "1f7a8c",
+    "description": "User service ownership"
+  },
+  {
+    "name": "svc:todo",
+    "color": "6a00f4",
+    "description": "Todo service ownership"
+  },
+  {
+    "name": "svc:tag",
+    "color": "d7263d",
+    "description": "Tag service ownership"
+  },
+  {
+    "name": "svc:notify",
+    "color": "ffb703",
+    "description": "Notification service ownership"
+  },
+  {
+    "name": "svc:admin",
+    "color": "8ecae6",
+    "description": "Admin service ownership"
+  },
+  {
+    "name": "svc:gateway",
+    "color": "219ebc",
+    "description": "API Gateway ownership"
+  },
+  {
+    "name": "svc:infra",
+    "color": "2a9d8f",
+    "description": "Infrastructure ownership"
+  },
+  {
+    "name": "type:feature",
+    "color": "0ead69",
+    "description": "New feature"
+  },
+  {
+    "name": "type:bug",
+    "color": "e63946",
+    "description": "Bug fix"
+  },
+  {
+    "name": "type:techdebt",
+    "color": "756b6b",
+    "description": "Technical debt / refactor"
+  },
+  {
+    "name": "prio:p0",
+    "color": "b00020",
+    "description": "Critical priority"
+  },
+  {
+    "name": "prio:p1",
+    "color": "ef476f",
+    "description": "High priority"
+  },
+  {
+    "name": "prio:p2",
+    "color": "ffd166",
+    "description": "Medium priority"
+  }
+]
