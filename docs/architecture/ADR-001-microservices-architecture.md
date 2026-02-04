@@ -3,7 +3,9 @@
 **Status:** Approved  
 **Date:** 2026-03-02  
 **Decision Makers:** Architecture Team  
-**Supersedes:** Monolithic Spring Boot Architecture
+**Supersedes:** Monolithic Spring Boot Architecture  
+
+**Summary:** We adopt a polyglot microservices architecture (C#, Java, Python, Kong, PostgreSQL, RabbitMQ) for a Todo domain to maximize learning value and architectural realism.
 
 ---
 
@@ -207,9 +209,8 @@ Each service owns its database with **logical schema isolation** (initially) evo
 - **Multi-stage Builds**: Yes, to minimize image size
 
 ### Orchestration
-- **Local Development**: Docker Compose
-- **Production**: Kubernetes (Minikube/Kind for local, AKS/EKS/GKE for cloud)
-- *Target production environment: Kubernetes (AKS/EKS/GKE).*
+- **Local**: Docker Compose / Kind
+- **Target Production**: Kubernetes (AKS/EKS/GKE)
 - **Configuration Management**: Helm charts
 - **Service Discovery**: Kubernetes DNS (automatic)
 
@@ -228,7 +229,8 @@ Each service owns its database with **logical schema isolation** (initially) evo
 - **Algorithm**: RS256 (asymmetric signing)
 - **Issuer**: Authentication Service
 - **Audience**: All services
-- **Claims**:
+- **Claims**:  
+  Example access token payload:
   ```json
   {
     "sub": "user-uuid",
@@ -269,7 +271,7 @@ Each service owns its database with **logical schema isolation** (initially) evo
 ### Distributed Tracing
 - **Technology**: Jaeger (OpenTelemetry compatible)
 - **Implementation**: OpenTelemetry SDKs in all services
-- **Correlation**: X-Correlation-ID header propagated across all services
+- **Correlation**: X-Correlation-ID header and W3C traceparent header propagated across all services
 - **Sampling**: 100% in dev, 10% in production
 
 ### Metrics
@@ -283,7 +285,7 @@ Each service owns its database with **logical schema isolation** (initially) evo
   - Service-specific business metrics
 
 ### Logging
-- **Strategy**: *Planned centralized logging via ELK Stack.*
+- **Strategy**: *Planned centralized logging via ELK Stack (not implemented in the initial infra compose stack).*
 - **Format**: Structured JSON logs
 - **Fields**: timestamp, level, service, trace_id, user_id, message
 - **Aggregation**: Logstash → Elasticsearch → Kibana
@@ -318,6 +320,8 @@ Each service owns its database with **logical schema isolation** (initially) evo
 - **Technology**: k6 (Grafana)
 - **Scenarios**: Login, todo list, todo create
 - **Thresholds**: p95 < 500ms, error rate < 1%
+
+*See docs/testing/test-strategy.md for detailed strategy and coverage of cross-service scenarios.*
 
 ---
 
