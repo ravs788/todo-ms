@@ -275,15 +275,15 @@ All API responses use this structure:
 For detailed implementation of each service, refer to:
 
 ### Core Services
-- [Authentication Service LLD](low-level-design-auth-service.md) - .NET 8 authentication, JWT management
-- [User Management Service LLD](low-level-design-user-service.md) - .NET 8 user profiles and preferences
-- [Todo Service LLD](low-level-design-todo-service.md) - Spring Boot todo CRUD and business logic
-- [Tag Service LLD](low-level-design-tag-service.md) - FastAPI tag management
+- [Authentication Service LLD](low-level-design/auth-service.md) - .NET 8 authentication, JWT management
+- [User Management Service LLD](low-level-design/user-service.md) - .NET 8 user profiles and preferences
+- [Todo Service LLD](low-level-design/todo-service.md) - Spring Boot todo CRUD and business logic
+- [Tag Service LLD](low-level-design/tag-service.md) - FastAPI tag management
 
 ### Supporting Services
-- [Notification Service LLD](low-level-design-notification-service.md) - FastAPI + Celery push notifications
-- [Admin Service LLD](low-level-design-admin-service.md) - Spring Boot admin operations
-- [API Gateway LLD](low-level-design-gateway.md) - Kong configuration and routing
+- [Notification Service LLD](low-level-design/notification-service.md) - FastAPI + Celery push notifications
+- [Admin Service LLD](low-level-design/admin-service.md) - Spring Boot admin operations
+- [API Gateway LLD](low-level-design/gateway.md) - Kong configuration and routing
 
 ---
 
@@ -296,7 +296,7 @@ For detailed implementation of each service, refer to:
 ---
 
 **Next Steps:**
-- [Low-Level Design](low-level-design-auth-service.md) - Authentication Service implementation details
-- [Low-Level Design](low-level-design-user-service.md) - User Management Service implementation details
-- [Low-Level Design](low-level-design-todo-service.md) - Todo Service implementation details
-- [Low-Level Design](low-level-design-tag-service.md) - Tag Service implementation details
+- [Low-Level Design](low-level-design/auth-service.md) - Authentication Service implementation details
+- [Low-Level Design](low-level-design/user-service.md) - User Management Service implementation details
+- [Low-Level Design](low-level-design/todo-service.md) - Todo Service implementation details
+- [Low-Level Design](low-level-design/tag-service.md) - Tag Service implementation details
