@@ -1,7 +1,7 @@
 # Low-Level Design (LLD) - Authentication Service
 
 **Version:** 1.0  
-**Date:** March 2, 2026  
+**Date:** February 5, 2026  
 **Status:** Draft
 
 ## Overview
@@ -249,7 +249,7 @@ services/auth-service/
 ### Standard Error Response
 ```json
 {
-  "timestamp": "2026-03-02T00:00:00.000Z",
+  "timestamp": "2026-02-05T00:00:00.000Z",
   "status": 400,
   "error": "Bad Request",
   "message": "Validation failed",
@@ -341,4 +341,4 @@ services:
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
-| 1.0 | 2026-03-02 | Architecture Team | Initial LLD for Authentication Service |
+| 1.0 | 2026-02-05 | Architecture Team | Initial LLD for Authentication Service |

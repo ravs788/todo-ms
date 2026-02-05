@@ -1,7 +1,7 @@
 # ADR-001: Polyglot Microservices Architecture
 
 **Status:** Approved  
-**Date:** 2026-03-02  
+**Date:** 2026-02-05  
 **Decision Makers:** Architecture Team  
 **Supersedes:** Monolithic Spring Boot Architecture  
 
@@ -424,12 +424,12 @@ Gradually replace monolith functionality with microservices while keeping the sy
 
 | Name | Role | Date | Signature |
 |------|------|------|-----------|
-| Architecture Team | System Architect | 2026-03-02 | Approved |
-| Development Team | Lead Developer | 2026-03-02 | Approved |
-| Operations Team | DevOps Lead | 2026-03-02 | Approved |
+| Architecture Team | System Architect | 2026-02-05 | Approved |
+| Development Team | Lead Developer | 2026-02-05 | Approved |
+| Operations Team | DevOps Lead | 2026-02-05 | Approved |
 
 ---
 
 **Document Version**: 1.0  
-**Last Updated**: March 2, 2026  
+**Last Updated**: February 5, 2026  
 **Next Review**: June 2, 2026 (3 months post-implementation)

@@ -1,7 +1,7 @@
 # Low-Level Design (LLD) - Admin Service
 
 **Version:** 1.0  
-**Date:** March 2, 2026  
+**Date:** February 5, 2026  
 **Status:** Draft
 
 ## Overview
@@ -300,4 +300,4 @@ services:
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
-| 1.0 | 2026-03-02 | Architecture Team | Initial LLD for Admin Service |
+| 1.0 | 2026-02-05 | Architecture Team | Initial LLD for Admin Service |

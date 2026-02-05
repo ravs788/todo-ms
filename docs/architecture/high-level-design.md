@@ -1,7 +1,7 @@
 # High-Level Design (HLD) - Todo Microservices Solution
 
 **Version:** 1.0  
-**Date:** March 2, 2026  
+**Date:** February 5, 2026  
 **Status:** Approved
 
 ---
@@ -505,7 +505,7 @@ Event Flow Example:
    {
      "eventType": "user.approved",
      "userId": "uuid",
-     "timestamp": "2026-03-02T10:00:00Z"
+     "timestamp": "2026-02-05T10:00:00Z"
    }
 
 2. Notification Service consumes event
@@ -774,7 +774,7 @@ pg_stat_database_numbackends
 
 ```json
 {
-  "timestamp": "2026-03-02T10:30:00Z",
+  "timestamp": "2026-02-05T10:30:00Z",
   "level": "INFO",
   "service": "todo-service",
   "traceId": "abc-123-def",
@@ -817,7 +817,7 @@ pg_stat_database_numbackends
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
-| 1.0 | 2026-03-02 | Architecture Team | Initial version |
+| 1.0 | 2026-02-05 | Architecture Team | Initial version |
 
 ---
 

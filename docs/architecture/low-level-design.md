@@ -1,10 +1,12 @@
 # Low-Level Design (LLD) - Todo Microservices Solution
 
 **Version:** 1.0  
-**Date:** March 2, 2026  
+**Date:** February 5, 2026  
 **Status:** Draft
 
 This document provides a central overview of the low-level design for the Todo Microservices Solution. It outlines common patterns, infrastructure setup, and cross-cutting concerns that apply across all services. For detailed implementation of individual services, refer to the service-specific LLD documents below.
+
+Testing and quality practices that rely on these patterns are described in docs/testing/test-strategy.md.
 
 ## Contents
 
@@ -71,7 +73,7 @@ This document provides a central overview of the low-level design for the Todo M
 ### Rate Limiting
 - **Gateway Level:** Kong handles global rate limiting
 - **Service Level:** Services must handle 429 gracefully
-- **Client Strategy:** Clients retry only idempotent GET operations
+- **Client Strategy:** Clients retry only idempotent GET operations; non-idempotent POST/PUT/DELETE should not be auto-retried by clients; retries for POST must reuse the same Idempotency-Key.
 
 ### Retry Policies
 - **Background Workers:** Exponential backoff for failed operations
@@ -91,7 +93,7 @@ Services use environment variables for configuration:
 ### Secrets Storage
 - **Local Development:** .env files (excluded from VCS)
 - **Kubernetes:** Secrets mounted as environment variables
-- **Rotation:** Automated rotation for sensitive keys (e.g., JWT keys every 90 days)
+- **Rotation:** Automated rotation for sensitive keys (e.g., JWT keys every 90 days) - planned via ops tooling; initial implementation uses manually rotated keys
 
 ### Configuration Management
 - **.NET Services:** appsettings.json + Environment Variables
@@ -128,7 +130,8 @@ Services use environment variables for configuration:
 ## Error Handling & API Responses
 
 ### Standard Error Envelope
-All API responses use this structure:
+All error responses use this structure; success responses return plain resource JSON (or no body for 204).
+
 ```json
 {
   "traceId": "uuid-or-correlation",
@@ -262,6 +265,7 @@ All API responses use this structure:
 - Introduce service mesh (Istio) for mTLS and traffic shaping
 - Implement canary deployments with traffic shifting
 - Add advanced monitoring and alerting
+These are out of scope for the initial learning implementation but documented here as future evolution paths
 
 ### Data
 - Implement CQRS pattern for read/write separation
@@ -291,7 +295,7 @@ For detailed implementation of each service, refer to:
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
-| 1.0 | 2026-03-02 | Architecture Team | Initial LLD overview drafted |
+| 1.0 | 2026-02-05 | Architecture Team | Initial LLD overview drafted |
 
 ---
 

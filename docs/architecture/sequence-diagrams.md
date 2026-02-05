@@ -1,7 +1,7 @@
 # Sequence Diagrams - Todo Microservices Solution
 
 Version: 1.0
-Date: March 2, 2026
+Date: February 5, 2026
 Status: Approved
 
 This document provides end-to-end sequence diagrams covering core user and system flows across the polyglot microservices architecture routed via the API Gateway (Kong). These flows align with ADR-001, HLD, and LLD.
@@ -234,4 +234,4 @@ Notes:
 ---
 
 Document History
-- 1.0 (2026-03-02): Initial set of cross-service sequence diagrams
+- 1.0 (2026-02-05): Initial set of cross-service sequence diagrams
