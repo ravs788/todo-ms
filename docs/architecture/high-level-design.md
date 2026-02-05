@@ -1,7 +1,7 @@
 # High-Level Design (HLD) - Todo Microservices Solution
 
 **Version:** 1.0  
-**Date:** March 2, 2026  
+**Date:** February 5, 2026  
 **Status:** Approved
 
 ---
@@ -33,7 +33,7 @@ The Todo Microservices Solution is a distributed system that decomposes a monoli
 - **Communication**: REST/HTTP + Event-Driven (RabbitMQ)
 - **Data Storage**: PostgreSQL per service + Redis for caching
 - **Deployment**: Docker containers orchestrated by Kubernetes
-- **Frontend**: React 19 SPA
+- **Frontend**: React 18+ SPA (targeting React 19)
 
 ---
 
@@ -52,7 +52,7 @@ All client requests flow through a centralized API Gateway (Kong) which handles 
 Services communicate asynchronously via RabbitMQ for operations that don't require immediate response (e.g., notifications, analytics).
 
 ### 5. Observability First
-Every service implements distributed tracing, metrics, and structured logging from day one.
+Every service implements distributed tracing, metrics, and structured logging from day one. Local development uses OpenTelemetry SDKs to emit traces to Jaeger and metrics to Prometheus, visualized via Grafana dashboards.
 
 ### 6. Fail Fast
 Services validate inputs early and return explicit errors. Circuit breakers prevent cascading failures.
@@ -64,7 +64,7 @@ All infrastructure (Docker Compose, Kubernetes manifests, Helm charts) is versio
 
 ## System Architecture Diagram
 
-```
+```text
 ┌───────────────────────────────────────────────────────────────────────┐
 │                           CLIENT LAYER                                 │
 │                                                                        │
@@ -340,28 +340,28 @@ Each service owns its data with dedicated PostgreSQL databases:
 #### Auth Service Database (auth_db)
 
 ```sql
-refresh_tokens (
+CREATE TABLE refresh_tokens (
   id UUID PRIMARY KEY,
   user_id UUID NOT NULL,
   token TEXT NOT NULL,
   expires_at TIMESTAMP NOT NULL,
   created_at TIMESTAMP DEFAULT NOW(),
   revoked_at TIMESTAMP
-)
+);
 
-password_reset_log (
+CREATE TABLE password_reset_log (
   id UUID PRIMARY KEY,
   user_id UUID NOT NULL,
   reset_at TIMESTAMP DEFAULT NOW(),
   ip_address VARCHAR(45),
   user_agent TEXT
-)
+);
 ```
 
 #### User Service Database (user_db)
 
 ```sql
-users (
+CREATE TABLE users (
   id UUID PRIMARY KEY,
   username VARCHAR(100) UNIQUE NOT NULL,
   email VARCHAR(255) UNIQUE NOT NULL,
@@ -370,22 +370,22 @@ users (
   approved BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP
-)
+);
 
-user_preferences (
+CREATE TABLE user_preferences (
   id UUID PRIMARY KEY,
   user_id UUID UNIQUE NOT NULL,
   theme VARCHAR(20) DEFAULT 'light',
   notifications_enabled BOOLEAN DEFAULT TRUE,
   language VARCHAR(10) DEFAULT 'en',
   FOREIGN KEY (user_id) REFERENCES users(id)
-)
+);
 ```
 
 #### Todo Service Database (todo_db)
 
 ```sql
-todos (
+CREATE TABLE todos (
   id UUID PRIMARY KEY,
   user_id UUID NOT NULL,
   title VARCHAR(500) NOT NULL,
@@ -397,51 +397,51 @@ todos (
   sort_order INTEGER,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP
-)
+);
 
-todo_history (
+CREATE TABLE todo_history (
   id UUID PRIMARY KEY,
   todo_id UUID NOT NULL,
   user_id UUID NOT NULL,
   action VARCHAR(50) NOT NULL,
   snapshot JSONB NOT NULL,
   created_at TIMESTAMP DEFAULT NOW()
-)
+);
 ```
 
 #### Tag Service Database (tag_db)
 
 ```sql
-tags (
+CREATE TABLE tags (
   id UUID PRIMARY KEY,
   user_id UUID NOT NULL,
   name VARCHAR(100) NOT NULL,
   color VARCHAR(7) DEFAULT '#3498db',
   created_at TIMESTAMP DEFAULT NOW(),
   UNIQUE(user_id, name)
-)
+);
 
-todo_tags (
+CREATE TABLE todo_tags (
   todo_id UUID NOT NULL,
   tag_id UUID NOT NULL,
   created_at TIMESTAMP DEFAULT NOW(),
   PRIMARY KEY (todo_id, tag_id)
-)
+);
 ```
 
 #### Notification Service Database (notification_db)
 
 ```sql
-push_subscriptions (
+CREATE TABLE push_subscriptions (
   id UUID PRIMARY KEY,
   user_id UUID UNIQUE NOT NULL,
   endpoint TEXT NOT NULL,
   p256dh TEXT NOT NULL,
   auth TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT NOW()
-)
+);
 
-notification_log (
+CREATE TABLE notification_log (
   id UUID PRIMARY KEY,
   user_id UUID NOT NULL,
   type VARCHAR(50) NOT NULL,
@@ -449,21 +449,25 @@ notification_log (
   body TEXT,
   sent_at TIMESTAMP DEFAULT NOW(),
   status VARCHAR(20)
-)
+);
 ```
 
 #### Admin Service Database (admin_db)
 
 ```sql
-admin_actions (
+CREATE TABLE admin_actions (
   id UUID PRIMARY KEY,
   admin_user_id UUID NOT NULL,
   target_user_id UUID,
   action VARCHAR(100) NOT NULL,
   details JSONB,
   created_at TIMESTAMP DEFAULT NOW()
-)
+);
 ```
+
+### Redis Usage
+
+Redis serves both as a cache and as infrastructure backing certain components (rate limiting, JWT tokens, Celery).
 
 ---
 
@@ -473,7 +477,7 @@ admin_actions (
 
 **Client → Gateway → Services**
 
-```
+```text
 Client Request:
 GET /api/v1/todos?page=1&size=10
 Authorization: Bearer eyJhbGc...
@@ -493,7 +497,7 @@ Todo Service:
 
 **Event-Driven Architecture**
 
-```
+```text
 Event Flow Example:
 
 1. Admin approves user
@@ -501,7 +505,7 @@ Event Flow Example:
    {
      "eventType": "user.approved",
      "userId": "uuid",
-     "timestamp": "2026-03-02T10:00:00Z"
+     "timestamp": "2026-02-05T10:00:00Z"
    }
 
 2. Notification Service consumes event
@@ -513,7 +517,7 @@ Event Flow Example:
 
 **RabbitMQ Exchange Configuration:**
 
-```
+```text
 Exchange: todo.events (topic)
 ├── Routing Key: user.approved
 │   └── Queues: notification-service-queue
@@ -525,13 +529,15 @@ Exchange: todo.events (topic)
     └── Queues: analytics-queue
 ```
 
+This keeps write-paths in Todo and Admin services decoupled from Notification/Analytics consumers while still supporting fan-out on key events.
+
 ---
 
 ## Security Architecture
 
 ### Authentication Flow
 
-```
+```text
 1. User Login
    Frontend → Gateway → Auth Service
    
@@ -579,6 +585,8 @@ Exchange: todo.events (topic)
 | DELETE /todos/{id} | ✗ | ✓ (own) | ✓ (all) |
 | GET /admin/users/pending | ✗ | ✗ | ✓ |
 | POST /admin/users/{id}/approve | ✗ | ✗ | ✓ |
+
+Future roles (e.g., SUPPORT, AUDITOR) can be added by extending JWT roles and gateway/service policies.
 
 ---
 
@@ -630,7 +638,7 @@ services:
 
 ### Kubernetes Architecture
 
-```
+```text
 Namespace: todo-app
 
 Deployments:
@@ -725,7 +733,7 @@ Notification Service:
 
 **Trace Example:**
 
-```
+```text
 Request ID: abc-123-def
 
 Spans:
@@ -760,11 +768,13 @@ pg_stat_database_numbackends
 
 ### Logging (ELK Stack)
 
+**Logging (future/optional): ELK stack for centralized log search; initial implementation may use simpler file/console logs.**
+
 **Log Format:**
 
 ```json
 {
-  "timestamp": "2026-03-02T10:30:00Z",
+  "timestamp": "2026-02-05T10:30:00Z",
   "level": "INFO",
   "service": "todo-service",
   "traceId": "abc-123-def",
@@ -807,7 +817,7 @@ pg_stat_database_numbackends
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
-| 1.0 | 2026-03-02 | Architecture Team | Initial version |
+| 1.0 | 2026-02-05 | Architecture Team | Initial version |
 
 ---
 

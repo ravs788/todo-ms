@@ -1,21 +1,23 @@
 # ADR-001: Polyglot Microservices Architecture
 
 **Status:** Approved  
-**Date:** 2026-03-02  
+**Date:** 2026-02-05  
 **Decision Makers:** Architecture Team  
-**Supersedes:** Monolithic Spring Boot Architecture
+**Supersedes:** Monolithic Spring Boot Architecture  
+
+**Summary:** We adopt a polyglot microservices architecture (C#, Java, Python, Kong, PostgreSQL, RabbitMQ) for a Todo domain to maximize learning value and architectural realism.
 
 ---
 
 ## Context
 
-The current Todo application is implemented as a monolithic Spring Boot application with a React frontend. While this architecture has served well for initial development, several factors motivate a migration to microservices:
+This ADR documents the target architecture for the todo-ms learning system and serves as a reference for all subsequent design docs. The current Todo application backend is implemented as a monolithic Spring Boot application (React frontend is planned for future work). While this backend has served well for initial development, several factors motivate a migration to microservices:
 
 ### Current Pain Points
 
 1. **Tight Coupling**: All business logic is tightly coupled within a single deployment unit
 2. **Scaling Limitations**: Cannot scale individual components independently
-3. **Technology Lock-in**: Entire backend must use Java/Spring Boot
+3. **Technology Lock-in**: Entire backend must use Java/Spring Boot, which limits demonstrating polyglot patterns for this learning project
 4. **Deployment Risk**: Any change requires redeploying the entire application
 5. **Team Scalability**: Single codebase becomes harder to manage with multiple teams
 6. **Learning Constraints**: Cannot demonstrate polyglot architecture patterns
@@ -45,6 +47,8 @@ We will decompose the monolithic application into **7 independent microservices*
 | **Notification Service** | Python (FastAPI) | Excellent async support for I/O-bound operations | 8002 |
 | **Admin Service** | Java (Spring Boot 3.x) | Can share code libraries with Todo Service | 8082 |
 | **API Gateway** | Kong | Production-ready, extensive plugin ecosystem | 8000 |
+
+*Initial implementation uses only PostgreSQL; MongoDB/Redis are explored as future polyglot persistence options.*
 
 ### Technology Rationale
 
@@ -117,6 +121,7 @@ We will decompose the monolithic application into **7 independent microservices*
 - **Protocol**: REST/HTTP (can evolve to gRPC for performance)
 - **Service Discovery**: Kubernetes DNS (native)
 - **Load Balancing**: Kubernetes Service (round-robin)
+- *Note: For local development, Docker Compose service names are used; for Kubernetes, service discovery relies on cluster DNS.*
 
 ### Inter-Service Events (Asynchronous)
 - **Message Broker**: RabbitMQ
@@ -204,8 +209,8 @@ Each service owns its database with **logical schema isolation** (initially) evo
 - **Multi-stage Builds**: Yes, to minimize image size
 
 ### Orchestration
-- **Local Development**: Docker Compose
-- **Production**: Kubernetes (Minikube/Kind for local, AKS/EKS/GKE for cloud)
+- **Local**: Docker Compose / Kind
+- **Target Production**: Kubernetes (AKS/EKS/GKE)
 - **Configuration Management**: Helm charts
 - **Service Discovery**: Kubernetes DNS (automatic)
 
@@ -224,7 +229,8 @@ Each service owns its database with **logical schema isolation** (initially) evo
 - **Algorithm**: RS256 (asymmetric signing)
 - **Issuer**: Authentication Service
 - **Audience**: All services
-- **Claims**:
+- **Claims**:  
+  Example access token payload:
   ```json
   {
     "sub": "user-uuid",
@@ -265,7 +271,7 @@ Each service owns its database with **logical schema isolation** (initially) evo
 ### Distributed Tracing
 - **Technology**: Jaeger (OpenTelemetry compatible)
 - **Implementation**: OpenTelemetry SDKs in all services
-- **Correlation**: X-Correlation-ID header propagated across all services
+- **Correlation**: X-Correlation-ID header and W3C traceparent header propagated across all services
 - **Sampling**: 100% in dev, 10% in production
 
 ### Metrics
@@ -279,7 +285,7 @@ Each service owns its database with **logical schema isolation** (initially) evo
   - Service-specific business metrics
 
 ### Logging
-- **Strategy**: Centralized logging with ELK Stack
+- **Strategy**: *Planned centralized logging via ELK Stack (not implemented in the initial infra compose stack).*
 - **Format**: Structured JSON logs
 - **Fields**: timestamp, level, service, trace_id, user_id, message
 - **Aggregation**: Logstash → Elasticsearch → Kibana
@@ -293,7 +299,7 @@ Each service owns its database with **logical schema isolation** (initially) evo
 - **C# Services**: xUnit + Moq + FluentAssertions
 - **Java Services**: JUnit 5 + Mockito + AssertJ
 - **Python Services**: pytest + pytest-mock + pytest-cov
-- **Coverage Target**: 80%+ per service
+- **Coverage Target**: *Aspirational target of 80%+ per service for critical domain and integration paths.*
 
 ### Integration Testing
 - **Technology**: Testcontainers (PostgreSQL, RabbitMQ, Redis)
@@ -315,6 +321,8 @@ Each service owns its database with **logical schema isolation** (initially) evo
 - **Scenarios**: Login, todo list, todo create
 - **Thresholds**: p95 < 500ms, error rate < 1%
 
+*See docs/testing/test-strategy.md for detailed strategy and coverage of cross-service scenarios.*
+
 ---
 
 ## Migration Approach
@@ -330,6 +338,8 @@ Gradually replace monolith functionality with microservices while keeping the sy
 5. **Extract Notification Service** → Route `/notifications/*` to new service
 6. **Extract Admin Service** → Route `/admin/*` to new service
 7. **Decommission Monolith** → All traffic through microservices
+
+*Note: The API Gateway (Kong) becomes the primary switch for routing traffic between the monolith and microservices during this migration.*
 
 ### Risk Mitigation
 - **Feature Flags**: Kong routes can be toggled per endpoint
@@ -361,7 +371,7 @@ Gradually replace monolith functionality with microservices while keeping the sy
 
 ### Mitigation Strategies
 
-1. **Observability First**: Invest in Jaeger, Prometheus, and centralized logging upfront
+1. **Observability First**: Invest in Jaeger, Prometheus and centralized logging upfront
 2. **Service Mesh (Future)**: Consider Istio/Linkerd for advanced traffic management
 3. **API Contracts**: Strict OpenAPI specs with contract testing
 4. **Automation**: Comprehensive CI/CD pipelines for all services
@@ -414,12 +424,12 @@ Gradually replace monolith functionality with microservices while keeping the sy
 
 | Name | Role | Date | Signature |
 |------|------|------|-----------|
-| Architecture Team | System Architect | 2026-03-02 | Approved |
-| Development Team | Lead Developer | 2026-03-02 | Approved |
-| Operations Team | DevOps Lead | 2026-03-02 | Approved |
+| Architecture Team | System Architect | 2026-02-05 | Approved |
+| Development Team | Lead Developer | 2026-02-05 | Approved |
+| Operations Team | DevOps Lead | 2026-02-05 | Approved |
 
 ---
 
 **Document Version**: 1.0  
-**Last Updated**: March 2, 2026  
+**Last Updated**: February 5, 2026  
 **Next Review**: June 2, 2026 (3 months post-implementation)

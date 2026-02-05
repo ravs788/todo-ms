@@ -1,0 +1,181 @@
+name: Miro Sync (Issues → Miro)
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Manual run: enable when ready (Miro integration deferred)'
+        required: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  sync:
+    name: Sync GitHub Issue to Miro
+    runs-on: ubuntu-latest
+
+    env:
+      # Default coordinates per lane (center-origin). Adjust as needed.
+      LANE_COORDS_AUTH_X: -1800
+      LANE_COORDS_AUTH_Y: -900
+      LANE_COORDS_USER_X: -1200
+      LANE_COORDS_USER_Y: -900
+      LANE_COORDS_TODO_X:  -600
+      LANE_COORDS_TODO_Y:  -900
+      LANE_COORDS_TAG_X:      0
+      LANE_COORDS_TAG_Y:   -900
+      LANE_COORDS_NOTIFY_X:  600
+      LANE_COORDS_NOTIFY_Y:  -900
+      LANE_COORDS_ADMIN_X:  1200
+      LANE_COORDS_ADMIN_Y:  -900
+      LANE_COORDS_GATEWAY_X: 1800
+      LANE_COORDS_GATEWAY_Y: -900
+      LANE_COORDS_INFRA_X:  2400
+      LANE_COORDS_INFRA_Y:  -900
+      LANE_COORDS_DONE_X:      0
+      LANE_COORDS_DONE_Y:    600
+
+    steps:
+      - name: Validate secrets
+        run: |
+          if [ -z "${{ secrets.MIRO_TOKEN }}" ] || [ -z "${{ secrets.MIRO_DELIVERY_BOARD_ID }}" ]; then
+            echo "::error::MIRO_TOKEN and MIRO_DELIVERY_BOARD_ID secrets are required."
+            exit 1
+          fi
+
+      - name: Extract issue metadata
+        id: meta
+        run: |
+          set -euo pipefail
+          EVENT="$GITHUB_EVENT_PATH"
+          ISSUE_NUMBER=$(jq -r .issue.number "$EVENT")
+          ISSUE_TITLE=$(jq -r .issue.title "$EVENT")
+          ISSUE_BODY=$(jq -r .issue.body "$EVENT")
+          ISSUE_STATE=$(jq -r .issue.state "$EVENT")
+          ISSUE_HTML_URL=$(jq -r .issue.html_url "$EVENT")
+          LABELS=$(jq -r '[.issue.labels[].name] | join(",")' "$EVENT")
+          # Deduce service from labels
+          SERVICE="infra"
+          for svc in auth user todo tag notify admin gateway infra; do
+            if echo "$LABELS" | grep -Eqi "(^|,)\s*svc:${svc}(\s*|,|$)"; then SERVICE="$svc"; break; fi
+          done
+          echo "issue_number=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
+          echo "issue_state=$ISSUE_STATE" >> $GITHUB_OUTPUT
+          # Preserve newlines safely
+          {
+            echo "issue_title<<EOF"
+            echo "$ISSUE_TITLE"
+            echo "EOF"
+            echo "issue_body<<EOF"
+            echo "${ISSUE_BODY:-}"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+          echo "issue_html_url=$ISSUE_HTML_URL" >> $GITHUB_OUTPUT
+          echo "service=$SERVICE" >> $GITHUB_OUTPUT
+
+      - name: Find existing Miro Card ID from comments
+        id: find_card
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          ISSUE_NUMBER="${{ steps.meta.outputs.issue_number }}"
+          API="https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${ISSUE_NUMBER}/comments?per_page=100"
+          card_id=""
+          page=1
+          while : ; do
+            res=$(curl -sS -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "$API&page=$page")
+            count=$(echo "$res" | jq 'length')
+            if [ "$count" -eq 0 ]; then break; fi
+            # Look for a comment beginning with our marker
+            id=$(echo "$res" | jq -r '.[] | select(.body|startswith("MIRO_CARD_ID:")) | .body' | head -n1 | awk -F": " '{print $2}')
+            if [ -n "${id:-}" ]; then card_id="$id"; break; fi
+            page=$((page+1))
+          done
+          echo "card_id=$card_id" >> $GITHUB_OUTPUT
+
+      - name: Compute target position (lane coordinates)
+        id: pos
+        run: |
+          set -euo pipefail
+          SERVICE="${{ steps.meta.outputs.service }}"
+          ISSUE_STATE="${{ steps.meta.outputs.issue_state }}"
+          case "$SERVICE" in
+            auth) x=${LANE_COORDS_AUTH_X}; y=${LANE_COORDS_AUTH_Y} ;;
+            user) x=${LANE_COORDS_USER_X}; y=${LANE_COORDS_USER_Y} ;;
+            todo) x=${LANE_COORDS_TODO_X}; y=${LANE_COORDS_TODO_Y} ;;
+            tag) x=${LANE_COORDS_TAG_X}; y=${LANE_COORDS_TAG_Y} ;;
+            notify) x=${LANE_COORDS_NOTIFY_X}; y=${LANE_COORDS_NOTIFY_Y} ;;
+            admin) x=${LANE_COORDS_ADMIN_X}; y=${LANE_COORDS_ADMIN_Y} ;;
+            gateway) x=${LANE_COORDS_GATEWAY_X}; y=${LANE_COORDS_GATEWAY_Y} ;;
+            infra|*) x=${LANE_COORDS_INFRA_X}; y=${LANE_COORDS_INFRA_Y} ;;
+          esac
+          # Closed issues go to Done lane
+          if [ "$ISSUE_STATE" = "closed" ]; then x=${LANE_COORDS_DONE_X}; y=${LANE_COORDS_DONE_Y}; fi
+          echo "x=$x" >> $GITHUB_OUTPUT
+          echo "y=$y" >> $GITHUB_OUTPUT
+
+      - name: Create or update Miro Card
+        id: miro
+        env:
+          MIRO_TOKEN: ${{ secrets.MIRO_TOKEN }}
+          MIRO_BOARD: ${{ secrets.MIRO_DELIVERY_BOARD_ID }}
+        run: |
+          set -euo pipefail
+          title="[${{ steps.meta.outputs.service }}] ${{ steps.meta.outputs.issue_title }} (#${{ steps.meta.outputs.issue_number }})"
+          # Trim description to avoid API limits (safe side)
+          body="${{ steps.meta.outputs.issue_body }}"
+          body="${body:0:7000}"
+          desc="${body}\n\nGitHub: ${{ steps.meta.outputs.issue_html_url }}"
+          x="${{ steps.pos.outputs.x }}"
+          y="${{ steps.pos.outputs.y }}"
+
+          payload=$(jq -n --arg title "$title" --arg desc "$desc" --argjson x "$x" --argjson y "$y" \
+            '{ data: { title: $title, description: $desc }, position: { origin: "center", x: $x, y: $y } }')
+
+          card_id="${{ steps.find_card.outputs.card_id }}"
+          if [ -z "$card_id" ] && [ "${{ steps.meta.outputs.issue_state }}" != "closed" ]; then
+            # Create
+            res=$(curl -sS -X POST "https://api.miro.com/v2/boards/${MIRO_BOARD}/cards" \
+              -H "Authorization: Bearer ${MIRO_TOKEN}" \
+              -H "Content-Type: application/json" \
+              -d "$payload")
+            new_id=$(echo "$res" | jq -r '.id')
+            if [ "$new_id" = "null" ] || [ -z "$new_id" ]; then
+              echo "::error::Failed to create Miro card: $res"
+              exit 1
+            fi
+            echo "new_id=$new_id" >> $GITHUB_OUTPUT
+            echo "card_url=$(echo "$res" | jq -r '.links.self')" >> $GITHUB_OUTPUT
+          elif [ -n "$card_id" ]; then
+            # Update
+            res=$(curl -sS -X PATCH "https://api.miro.com/v2/boards/${MIRO_BOARD}/cards/${card_id}" \
+              -H "Authorization: Bearer ${MIRO_TOKEN}" \
+              -H "Content-Type: application/json" \
+              -d "$payload")
+            echo "updated_id=$card_id" >> $GITHUB_OUTPUT
+            echo "card_url=$(echo "$res" | jq -r '.links.self // empty')" >> $GITHUB_OUTPUT
+          else
+            echo "Issue is closed but no existing card id found; skipping creation."
+          fi
+
+      - name: Comment Miro Card ID on issue (first-time create)
+        if: steps.miro.outputs.new_id != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          ISSUE_NUMBER="${{ steps.meta.outputs.issue_number }}"
+          NEW_ID="${{ steps.miro.outputs.new_id }}"
+          CARD_URL="${{ steps.miro.outputs.card_url }}"
+          BODY="MIRO_CARD_ID: ${NEW_ID}"
+          if [ -n "$CARD_URL" ] && [ "$CARD_URL" != "null" ]; then
+            BODY="${BODY}\nMIRO_CARD_URL: ${CARD_URL}"
+          fi
+          curl -sS -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -d "$(jq -n --arg body "$BODY" '{body: $body}')" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${ISSUE_NUMBER}/comments"
