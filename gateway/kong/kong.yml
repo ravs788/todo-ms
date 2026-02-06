@@ -1,0 +1,111 @@
+_format_version: "3.0"
+_transform: true
+
+services:
+  # Authentication Service
+  - name: auth-service
+    url: http://host.docker.internal:5001
+    routes:
+      - name: auth-routes
+        paths:
+          - /api/v1/auth
+        strip_path: false
+
+  # User Management Service  
+  - name: user-service
+    url: http://host.docker.internal:8000
+    routes:
+      - name: user-routes
+        paths:
+          - /api/v1/users
+        strip_path: false
+
+  # Todo Service
+  - name: todo-service
+    url: http://host.docker.internal:8004
+    routes:
+      - name: todo-routes
+        paths:
+          - /api/v1/todos
+        strip_path: false
+
+  # Tag Service
+  - name: tag-service
+    url: http://host.docker.internal:8001
+    routes:
+      - name: tag-routes
+        paths:
+          - /api/v1/tags
+        strip_path: false
+
+  # Notification Service
+  - name: notification-service
+    url: http://host.docker.internal:8002
+    routes:
+      - name: notification-routes
+        paths:
+          - /api/v1/notifications
+        strip_path: false
+
+  # Admin Service
+  - name: admin-service
+    url: http://host.docker.internal:8003
+    routes:
+      - name: admin-routes
+        paths:
+          - /api/v1/admin
+        strip_path: false
+
+  # Test Upstream: HTTPBin (internal compose service)
+  - name: httpbin
+    url: http://httpbin:8080
+    routes:
+      - name: httpbin-routes
+        paths:
+          - /httpbin
+        strip_path: true
+
+plugins:
+  # CORS plugin (global)
+  - name: cors
+    config:
+      origins:
+        - http://localhost:3000
+      methods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - OPTIONS
+      headers:
+        - Accept
+        - Accept-Version
+        - Content-Length
+        - Content-MD5
+        - Content-Type
+        - Date
+        - X-Auth-Token
+        - Authorization
+        - X-Correlation-Id
+      exposed_headers:
+        - X-Auth-Token
+        - X-Correlation-Id
+      credentials: true
+      max_age: 3600
+
+  # Request ID plugin (global)
+  - name: correlation-id
+    config:
+      header_name: X-Correlation-Id
+      generator: uuid
+      echo_downstream: true
+
+  # Rate limiting (global)
+  - name: rate-limiting
+    config:
+      minute: 1200
+      hour: 7200
+      policy: local
+
+  # Prometheus metrics (global)
+  - name: prometheus

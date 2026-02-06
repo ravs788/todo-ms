@@ -62,6 +62,22 @@ All infrastructure (Docker Compose, Kubernetes manifests, Helm charts) is versio
 
 ---
 
+## Current Implementation Status (Local)
+
+- Infrastructure
+  - Docker Compose stack running: PostgreSQL (per service), Redis, RabbitMQ, Kong (DB-less), Prometheus, Grafana, Jaeger
+  - API Gateway: Kong configured with routes for /api/v1/* and a test upstream /httpbin; global plugins enabled (CORS, correlation-id, rate-limiting, prometheus)
+  - Observability: Prometheus scraping enabled; Grafana pre-provisioned with Prometheus datasource; Jaeger UI reachable
+  - Developer UX: Makefile (up/down/status/ps/logs/smoke), scripts/smoke.sh, .env.example
+
+- Verified
+  - make smoke reports 200 for: Kong /httpbin/status/200, Prometheus /-/ready, Grafana /api/health, RabbitMQ UI, Jaeger UI
+  - Port conflict on 8080 mitigated: httpbin mapped to host 18080 (direct checks return 200)
+
+- Next (services)
+  - Implement Auth thin slice (login, JWKS) and route via Kong
+  - Implement Todo thin slice (JWT validation via JWKS, CRUD) and route via Kong
+
 ## System Architecture Diagram
 
 ```text
