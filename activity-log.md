@@ -9,6 +9,8 @@ Format:
 
 | Time (ISO-8601) | Area | Highlights |
 |---|---|---|
+| 2026-02-06T19:47:55+05:30 | dev | Repo hygiene: added root .gitignore; removed tracked build outputs (bin/, obj/, .DS_Store). |
+| 2026-02-06T19:44:12+05:30 | dev | Minimal Auth Service thin slice operational: /api/v1/auth/login (RS256 JWT) and /api/v1/auth/jwks; verified locally and via Kong; branch auth-service-thin-slice. |
 | 2026-02-06T11:57:40+05:30 | infra | Resolved port conflict: remapped httpbin to 18080; validated 200 direct (18080) and via Kong (/httpbin). |
 | 2026-02-05T22:24:40+05:30 | infra | Gateway e2e verified via Kong with /httpbin upstream; baseline reverse proxy functioning (200). |
 | 2026-02-05T22:12:56+05:30 | infra | Local infra baseline operational via Docker Compose: Postgres (per service), Redis, RabbitMQ, Kong, Prometheus, Grafana, Jaeger; health verified via smoke script; Kong metrics exposed. |
