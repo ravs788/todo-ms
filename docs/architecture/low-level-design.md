@@ -13,7 +13,7 @@ Testing and quality practices that rely on these patterns are described in docs/
 - Gateway: Kong configured with /api/v1/* routes and /httpbin test upstream; global plugins enabled (CORS, correlation-id, rate-limiting, prometheus); e2e verified 200 via /httpbin
 - Observability: Prometheus scraping enabled; Grafana datasource provisioned; Jaeger UI reachable
 - Developer UX: Makefile (up/down/status/ps/logs/smoke), scripts/smoke.sh, .env.example
-- Notes: Service implementations pending; next thin slices targeted — Auth (login, JWKS) and Todo (JWT validation, CRUD) via Kong
+- Notes: Auth thin slice delivered (login, JWKS) and verified via Kong; next thin slice — Todo (JWT validation, CRUD) via Kong
 
 ## Contents
 

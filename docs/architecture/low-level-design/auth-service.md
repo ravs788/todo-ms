@@ -8,6 +8,13 @@
 
 The Authentication Service handles user authentication, JWT token management, and registration workflows. It's built with .NET 8 and follows clean architecture principles with Entity Framework Core for data access.
 
+## Current Thin Slice (Local)
+- Endpoints implemented: POST /api/v1/auth/login, GET /api/v1/auth/jwks
+- Behavior (dev): login accepts any non-empty username/password; issues RS256 JWT with kid; includes approved=true and roles=["USER"]
+- Keys: Ephemeral RSA keypair generated on startup; JWKS exposes public key; no persistence yet
+- Hosting: http://localhost:5001; routed via Kong at http://localhost:8000/api/v1/auth/*
+- Next: add register/refresh/logout; persist users and refresh tokens
+
 ## Directory Structure
 
 ```
@@ -92,6 +99,8 @@ services/auth-service/
 - **Purpose:** Role-based access control
 
 ## Key Endpoints
+
+Note: Implemented now (thin slice): /api/v1/auth/login and /api/v1/auth/jwks. Remaining endpoints are planned for subsequent slices.
 
 | Method | Endpoint | Description | Access | Request Body | Response Body |
 |--------|----------|-------------|---------|--------------|---------------|
