@@ -1,0 +1,51 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Kong metrics
+  - job_name: 'kong'
+    static_configs:
+      - targets: ['kong:8001']
+    metrics_path: /metrics
+
+  # Auth Service (.NET)
+  - job_name: 'auth-service'
+    static_configs:
+      - targets: ['host.docker.internal:5001']
+    metrics_path: /metrics
+
+  # User Service (.NET)
+  - job_name: 'user-service'
+    static_configs:
+      - targets: ['host.docker.internal:8000']
+    metrics_path: /metrics
+
+  # Todo Service (Java/Spring)
+  - job_name: 'todo-service'
+    static_configs:
+      - targets: ['host.docker.internal:8004']
+    metrics_path: /actuator/prometheus
+
+  # Tag Service (Python/FastAPI)
+  - job_name: 'tag-service'
+    static_configs:
+      - targets: ['host.docker.internal:8001']
+    metrics_path: /metrics
+
+  # Notification Service (Python/FastAPI)
+  - job_name: 'notification-service'
+    static_configs:
+      - targets: ['host.docker.internal:8002']
+    metrics_path: /metrics
+
+  # Admin Service (Java/Spring)
+  - job_name: 'admin-service'
+    static_configs:
+      - targets: ['host.docker.internal:8003']
+    metrics_path: /actuator/prometheus

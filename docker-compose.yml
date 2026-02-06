@@ -1,0 +1,224 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Databases (one per service)
+  postgres-auth:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5432:5432"
+    volumes:
+      - auth_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-user:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: user_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5433:5432"
+    volumes:
+      - user_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-todo:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: todo_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5434:5432"
+    volumes:
+      - todo_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-tag:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: tag_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5435:5432"
+    volumes:
+      - tag_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-admin:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: admin_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5436:5432"
+    volumes:
+      - admin_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-notification:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: notification_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5437:5432"
+    volumes:
+      - notification_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis (for Notification Service/Celery)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # RabbitMQ (for messaging)
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin123
+    ports:
+      - "5672:5672"    # AMQP port
+      - "15672:15672"  # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Kong API Gateway (DB-less mode)
+  kong:
+    image: kong:3.6
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /kong/declarative/kong.yml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+      KONG_PROXY_LISTEN: 0.0.0.0:8000
+    ports:
+      - "8000:8000"    # Proxy port
+      - "8001:8001"    # Admin API
+    volumes:
+      - ./gateway/kong:/kong/declarative
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Jaeger (Distributed Tracing)
+  jaeger:
+    image: jaegertracing/all-in-one:1.54
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "4317:4317"    # OTLP gRPC
+      - "4318:4318"    # OTLP HTTP
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:16686/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Prometheus (Metrics)
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infra/compose/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Grafana (Dashboards)
+  grafana:
+    image: grafana/grafana:10.4.1
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin123
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infra/compose/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+    depends_on:
+      - prometheus
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # HTTPBin (Test upstream through Kong)
+  httpbin:
+    image: mccutchen/go-httpbin:latest
+    expose:
+      - "8080"
+    ports:
+      - "18080:8080"
+
+volumes:
+  auth_db_data:
+  user_db_data:
+  todo_db_data:
+  tag_db_data:
+  admin_db_data:
+  notification_db_data:
+  rabbitmq_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  default:
+    name: todo-ms-network

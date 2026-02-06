@@ -20,7 +20,7 @@ A polyglot microservices architecture implementation of a Todo application using
 
 ---
 
-Status: Architecture and infra ready; service implementations in progress.
+Status: Local infra running (Kong/Prometheus/Grafana/RabbitMQ/Postgres); gateway verified via /httpbin; services implementation in progress.
 
 ## 🧭 What problem does this solve?
 - Demonstrates decomposition of a monolith into bounded microservices with independent data stores, async messaging, and production‑grade DevOps (containerization, orchestration, observability, testing).
@@ -40,6 +40,7 @@ Status: Architecture and infra ready; service implementations in progress.
   - Sequence Diagrams: [docs/architecture/sequence-diagrams.md](docs/architecture/sequence-diagrams.md)
 - Testing strategy: [docs/testing/test-strategy.md](docs/testing/test-strategy.md)
 - Deployment plans: [docs/deployment/migration-plan.md](docs/deployment/migration-plan.md)
+- Activity log: [activity-log.md](activity-log.md)
 
 ---
 
@@ -79,7 +80,6 @@ todo-ms/
   │       └── kong.yml               # DB-less declarative config
   ├── infra/
   │   └── compose/
-  │       ├── docker-compose.yml     # Local infra stack (DBs, MQ, Redis, Kong, Jaeger, Prometheus, Grafana)
   │       └── prometheus/
   │           └── prometheus.yml
   ├── docs/
@@ -88,6 +88,7 @@ todo-ms/
   │   └── deployment/                # Plans and runbooks
   ├── scripts/                       # dev/test/migrate scripts
   ├── .env.example                   # Global defaults (DB names, log levels, etc.)
+  ├── docker-compose.yml             # Local infra stack (DBs, MQ, Redis, Kong, Jaeger, Prometheus)
   ├── Makefile                       # up/down/logs/test/migrate targets
   └── README.md
 ```
@@ -107,7 +108,7 @@ cp .env.example .env
 2. Start local infrastructure (databases, MQ, cache, gateway, observability)
 ```bash
 make up
-# or: docker compose -f infra/compose/docker-compose.yml up -d
+# or: docker compose up -d
 ```
 
 3. Access local UIs
@@ -164,4 +165,4 @@ To work on a specific service, open its folder under services/, follow the langu
 - CI workflows for contract validation and container builds
 - Compose services and Kubernetes manifests/Helm charts
 
-_Last updated: March 4, 2026_
+_Last updated: February 5, 2026_

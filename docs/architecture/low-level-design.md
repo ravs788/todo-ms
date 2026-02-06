@@ -8,6 +8,13 @@ This document provides a central overview of the low-level design for the Todo M
 
 Testing and quality practices that rely on these patterns are described in docs/testing/test-strategy.md.
 
+## Current Implementation Status (Local)
+- Infrastructure: Docker Compose stack running (PostgreSQL per service, Redis, RabbitMQ, Kong DB-less, Prometheus, Grafana, Jaeger)
+- Gateway: Kong configured with /api/v1/* routes and /httpbin test upstream; global plugins enabled (CORS, correlation-id, rate-limiting, prometheus); e2e verified 200 via /httpbin
+- Observability: Prometheus scraping enabled; Grafana datasource provisioned; Jaeger UI reachable
+- Developer UX: Makefile (up/down/status/ps/logs/smoke), scripts/smoke.sh, .env.example
+- Notes: Service implementations pending; next thin slices targeted — Auth (login, JWKS) and Todo (JWT validation, CRUD) via Kong
+
 ## Contents
 
 1. [Common Patterns & Conventions](#common-patterns--conventions)

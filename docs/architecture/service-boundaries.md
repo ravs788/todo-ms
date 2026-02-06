@@ -6,6 +6,12 @@
 
 This document defines the bounded contexts, ownership, public APIs, dependencies, and interaction rules for each microservice. It complements ADR-001, HLD, and LLD.
 
+## Current Implementation Status (Local)
+- Infrastructure: Docker Compose stack running (PostgreSQL per service, Redis, RabbitMQ, Kong DB-less, Prometheus, Grafana, Jaeger)
+- Gateway: Kong configured with /api/v1/* routes and test upstream /httpbin; end-to-end verified 200 via /httpbin; port 8080 conflict resolved by mapping httpbin to 18080
+- Observability: Prometheus scraping enabled; Grafana provisioned with Prometheus datasource; Jaeger UI reachable
+- Next: Implement Auth thin slice (login, JWKS) and Todo thin slice (JWT validation, CRUD) and route through Kong
+
 ## Contents
  
 1. [Principles](#principles)
