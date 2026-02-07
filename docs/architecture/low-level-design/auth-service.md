@@ -9,11 +9,13 @@
 The Authentication Service handles user authentication, JWT token management, and registration workflows. It's built with .NET 8 and follows clean architecture principles with Entity Framework Core for data access.
 
 ## Current Thin Slice (Local)
-- Endpoints implemented: POST /api/v1/auth/login, GET /api/v1/auth/jwks
-- Behavior (dev): login accepts any non-empty username/password; issues RS256 JWT with kid; includes approved=true and roles=["USER"]
-- Keys: Ephemeral RSA keypair generated on startup; JWKS exposes public key; no persistence yet
-- Hosting: http://localhost:5001; routed via Kong at http://localhost:8000/api/v1/auth/*
-- Next: add register/refresh/logout; persist users and refresh tokens
+- Endpoints implemented: POST /api/v1/auth/register, POST /api/v1/auth/login, POST /api/v1/auth/refresh, POST /api/v1/auth/logout, GET /api/v1/auth/jwks, GET /health, GET /api/v1/auth/health
+- Behavior: register creates user with PBKDF2-hashed password; login verifies credentials and issues RS256 JWT (kid set) plus refreshToken; includes approved=true and roles=["USER"]; refresh validates stored refresh token, rotates it and revokes the old one; logout revokes the provided refresh token; health endpoints return {"status":"healthy"}
+- Persistence: PostgreSQL (docker compose postgres-auth). Entities: users, refresh_tokens. Database EnsureCreated in Development for the thin slice.
+- Keys: Ephemeral RSA keypair generated on startup; JWKS exposes public key
+- Hosting: http://0.0.0.0:5001 (bound for Kong reachability); routed via Kong at http://localhost:8000/api/v1/auth/*
+- Verified: curl direct and via Kong return 200 for health/jwks and successful flows for register/login/refresh/logout
+- Next: add rate limiting, email-based flows (forgot/reset password), key rotation, tests/coverage
 
 ## Directory Structure
 
@@ -100,7 +102,7 @@ services/auth-service/
 
 ## Key Endpoints
 
-Note: Implemented now (thin slice): /api/v1/auth/login and /api/v1/auth/jwks. Remaining endpoints are planned for subsequent slices.
+Note: Implemented now: /api/v1/auth/register, /api/v1/auth/login, /api/v1/auth/refresh, /api/v1/auth/logout, /api/v1/auth/jwks, GET /health, GET /api/v1/auth/health. Remaining endpoints are planned for subsequent slices (e.g., forgot/reset password).
 
 | Method | Endpoint | Description | Access | Request Body | Response Body |
 |--------|----------|-------------|---------|--------------|---------------|

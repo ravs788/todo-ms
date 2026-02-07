@@ -10,8 +10,8 @@ This document defines the bounded contexts, ownership, public APIs, dependencies
 - Infrastructure: Docker Compose stack running (PostgreSQL per service, Redis, RabbitMQ, Kong DB-less, Prometheus, Grafana, Jaeger)
 - Gateway: Kong configured with /api/v1/* routes and test upstream /httpbin; end-to-end verified 200 via /httpbin; port 8080 conflict resolved by mapping httpbin to 18080
 - Observability: Prometheus scraping enabled; Grafana provisioned with Prometheus datasource; Jaeger UI reachable
-- Delivered: Auth thin slice (login, JWKS) verified via Kong; RS256 JWT issuance with kid
-- Next: Implement Todo thin slice (JWT validation via JWKS, CRUD) and route through Kong; expand Auth (register/refresh/logout, persistence)
+- Delivered: Auth service (register, login, refresh with rotation, logout, JWKS) verified via Kong; RS256 JWT with kid; persistence in postgres-auth
+- Next: Implement Todo thin slice (JWT validation via JWKS, CRUD) and route through Kong; Auth follow-ups: forgot/reset password, rate limiting, tests/coverage, key rotation
 
 ## Contents
  
