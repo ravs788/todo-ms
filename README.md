@@ -20,7 +20,7 @@ A polyglot microservices architecture implementation of a Todo application using
 
 ---
 
-Status: Local infra running (Kong/Prometheus/Grafana/RabbitMQ/Postgres); gateway verified via /httpbin; services implementation in progress.
+Status: Local infra running (Kong/Prometheus/Grafana/RabbitMQ/Postgres); gateway verified via /httpbin; Auth thin slice operational (login + JWKS via Kong); next: Todo thin slice.
 
 ## 🧭 What problem does this solve?
 - Demonstrates decomposition of a monolith into bounded microservices with independent data stores, async messaging, and production‑grade DevOps (containerization, orchestration, observability, testing).
@@ -165,4 +165,4 @@ To work on a specific service, open its folder under services/, follow the langu
 - CI workflows for contract validation and container builds
 - Compose services and Kubernetes manifests/Helm charts
 
-_Last updated: February 5, 2026_
+_Last updated: February 6, 2026_

@@ -9,6 +9,11 @@ Format:
 
 | Time (ISO-8601) | Area | Highlights |
 |---|---|---|
+| 2026-02-08T00:42:26+05:30 | docs | Coverage updated: Auth Service 96.0% lines / 81.5% branches; added unit + negative integration tests; COVERAGE.md refreshed. |
+| 2026-02-08T00:41:30+05:30 | test | Added unit and negative-path integration tests for auth-service (PasswordService, JwtService.ValidateToken, RefreshToken.IsActive, register/login/refresh/logout edge cases); all tests passing. |
+| 2026-02-08T00:03:09+05:30 | dev | Auth service extended: register/login/refresh rotation/logout implemented with Postgres persistence; verified via Kong (/api/v1/auth/*); RS256 JWT with kid; LLD/HLD/Service Boundaries updated. |
+| 2026-02-07T23:05:18+05:30 | dev | Auth Service refresh thin slice delivered: login returns refreshToken; POST /api/v1/auth/refresh added; tests: 6 passing. |
+| 2026-02-07T14:44:00+05:30 | dev | Auth Service health endpoints added (/health, /api/v1/auth/health); 5 integration tests passing (JWT, JWKS, login, health). |
 | 2026-02-06T19:47:55+05:30 | dev | Repo hygiene: added root .gitignore; removed tracked build outputs (bin/, obj/, .DS_Store). |
 | 2026-02-06T19:44:12+05:30 | dev | Minimal Auth Service thin slice operational: /api/v1/auth/login (RS256 JWT) and /api/v1/auth/jwks; verified locally and via Kong; branch auth-service-thin-slice. |
 | 2026-02-06T11:57:40+05:30 | infra | Resolved port conflict: remapped httpbin to 18080; validated 200 direct (18080) and via Kong (/httpbin). |

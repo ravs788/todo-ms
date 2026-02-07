@@ -72,10 +72,10 @@ All infrastructure (Docker Compose, Kubernetes manifests, Helm charts) is versio
 
 - Verified
   - make smoke reports 200 for: Kong /httpbin/status/200, Prometheus /-/ready, Grafana /api/health, RabbitMQ UI, Jaeger UI
+  - Auth service verified via Kong: 200 for /api/v1/auth/health and /api/v1/auth/jwks; register/login/refresh/logout flows succeed; RS256 JWT with kid; refresh rotation persisted in postgres-auth
   - Port conflict on 8080 mitigated: httpbin mapped to host 18080 (direct checks return 200)
 
 - Next (services)
-  - Implement Auth thin slice (login, JWKS) and route via Kong
   - Implement Todo thin slice (JWT validation via JWKS, CRUD) and route via Kong
 
 ## System Architecture Diagram
